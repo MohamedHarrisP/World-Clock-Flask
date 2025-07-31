@@ -18,3 +18,12 @@ jobs:
 
             - name: Build Docker Image
               run: docker build -t world-clock-flask:latest .
+
+            - name: Save Docker Image as tar file
+              run: docker save world-clock-flask:latest -o image-world-clock.tar
+
+            - name: Upload image as artifact
+              uses: actions/upload-artifact@v4
+              with:
+                name: image-tar
+                path: image.tar
