@@ -27,3 +27,26 @@ jobs:
               with:
                 name: image-tar
                 path: image-world-clock.tar
+    
+    scan-image:
+        name: Trivy Image Scan
+        needs: build-image
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Download Docker Image (tar file)
+              uses: actions/download-artifact@v4
+              with:
+                name: image-tar
+                path: .
+
+            - name: Load Docker Image
+              run: docker load -i image-world-clock.tar
+
+            - name: Run Trivy Scan
+              uses: aquasecurity/trivy-action@master
+              with:
+                image-ref: 'world-clock-flask:latest'
+                format: 'table'
+                severity: 'CRITICAL,HIGH'
+                scanners: 'vuln,secret,config'
