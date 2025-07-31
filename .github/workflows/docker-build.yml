@@ -43,6 +43,16 @@ jobs:
             - name: Load Docker Image
               run: docker load -i image-world-clock.tar
 
+            - name: Install Trivy
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y wget
+                wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+                echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+                sudo apt-get update
+                sudo apt-get install -y trivy
+
+
             - name: Run Trivy Scan
               run: |
                     trivy image --scanners vuln,secret,config \
@@ -50,3 +60,9 @@ jobs:
                     --format json \
                     --output trivy-report.json \
                     world-clock-flask:latest
+
+            - name: Upload Trivy Scan Results (JSON)
+              uses: actions/upload-artifact@v4
+              with:
+                name: trivy-report
+                path: trivy-report.json
