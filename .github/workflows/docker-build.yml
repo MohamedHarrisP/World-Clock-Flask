@@ -44,9 +44,9 @@ jobs:
               run: docker load -i image-world-clock.tar
 
             - name: Run Trivy Scan
-              uses: aquasecurity/trivy-action@master
-              with:
-                image-ref: 'world-clock-flask:latest'
-                format: 'table'
-                severity: 'CRITICAL,HIGH'
-                scanners: 'vuln,secret,config'
+              run: |
+                    trivy image --scanners vuln,secret,config \
+                    --severity CRITICAL,HIGH \
+                    --format json \
+                    --output trivy-report.json \
+                    world-clock-flask:latest
