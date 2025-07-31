@@ -26,4 +26,4 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: image-tar
-                path: image.tar
+                path: image-world-clock.tar
