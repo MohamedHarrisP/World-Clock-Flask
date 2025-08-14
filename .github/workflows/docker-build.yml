@@ -99,9 +99,9 @@ jobs:
             - name: Tag Docker Image
               run: |
                   ECR_URI = ${{ steps.login-ecr.outputs.registry}}
-                  docker tag world-clock-flask latest $ECR_URI/world-clock-flask:latest
+                  docker tag world-clock-flask latest $ECR_URI/public-portfolio/world-clock-flask:latest
 
             - name: Push Image to ECR
               run: |
                   ECR_URI = ${{ steps.login-ecr.outputs.registry}}
-                  docker push $ECR_URI/world-clock-flask:latest
+                  docker push $ECR_URI/public-portfolio/world-clock-flask:latest
