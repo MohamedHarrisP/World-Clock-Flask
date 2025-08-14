@@ -69,7 +69,7 @@ jobs:
       
     upload-image:
         name: Upload Image to ECR
-        needs: build-image
+        needs: scan-image
         runs-on: ubuntu-latest
 
         steps:
