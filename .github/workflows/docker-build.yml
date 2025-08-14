@@ -100,7 +100,7 @@ jobs:
               run: docker load -i image-world-clock.tar
 
             - name: Tag Docker Image
-              run: docker tag world-clock-flask latest $ECR_URI/public-portfolio/world-clock-flask:latest
+              run: docker tag world-clock-flask:latest $ECR_URI/public-portfolio/world-clock-flask:latest
 
             - name: Push Image to ECR
               run: docker push $ECR_URI/public-portfolio/world-clock-flask:latest
