@@ -1,4 +1,4 @@
-name: 2) Build, Scan & Upload Docker Image
+name: Code Scanning, Building Image, Image Scanning & Uploading Docker Image to ECR
 
 on:
   push:
@@ -6,8 +6,79 @@ on:
       - main
 
 jobs:
-  build-image:
+  sast:
+    name: SAST with Semgrep
     runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep
+        run: |
+          semgrep --config=p/security-audit \
+                  --config=p/flask \
+                  --config=p/python \
+                  --severity=ERROR \
+                  --json > semgrep_report.json
+
+      - name: Upload Semgrep Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep_report.json
+
+  sca:
+    name: SCA with pip-audit
+    runs-on: ubuntu-latest
+    needs: sast
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit SCA scan
+        run: pip-audit --requirement requirements.txt --format json > pip-audit-report.json || true
+
+      - name: Upload SCA report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report
+          path: pip-audit-report.json
+
+  secrets-scan:
+    name: Secrets Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    needs: sca
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --no-git --report-format json --report-path gitleaks-report.json
+
+      - name: Upload Gitleaks Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: secrets-report
+          path: gitleaks-report.json
+
+  build-image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: secrets-scan
+
     steps:
       - uses: actions/checkout@v3
 
@@ -24,8 +95,9 @@ jobs:
 
   scan-image:
     name: Trivy Image Scan
-    needs: build-image
     runs-on: ubuntu-latest
+    needs: build-image
+
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -60,6 +132,7 @@ jobs:
     name: Upload Image to ECR
     needs: scan-image
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/download-artifact@v4
         with:
